@@ -249,7 +249,9 @@ export default function App() {
             <div 
               className="relative"
               onBlur={(e) => {
-                if (!e.currentTarget.contains(e.relatedTarget)) {
+                if (e.relatedTarget && !e.currentTarget.contains(e.relatedTarget)) {
+                  setShowCountryDropdown(false);
+                } else if (!e.relatedTarget) {
                   setShowCountryDropdown(false);
                 }
               }}
@@ -439,8 +441,21 @@ export default function App() {
                   ) : res.image ? (
                     <img src={`data:image/jpeg;base64,${res.image}`} alt={res.market} className="w-full object-contain" />
                   ) : (
-                    <div className="aspect-video flex items-center justify-center text-red-500 text-sm font-medium">
-                      Failed to generate for {res.market}
+                    <div className="aspect-video flex flex-col items-center justify-center text-red-500 text-sm font-medium gap-4">
+                      <span>Failed to generate for {res.market}</span>
+                      <button
+                        onClick={() => {
+                          setResults(prev => prev.map(r => r.market === res.market ? { ...r, loading: true, error: null } : r));
+                          generateForMarket(res.market, uploadedReference!).then(image => {
+                            setResults(prev => prev.map(r => r.market === res.market ? { ...r, loading: false, image, error: image ? null : 'Failed' } : r));
+                          }).catch(() => {
+                            setResults(prev => prev.map(r => r.market === res.market ? { ...r, loading: false, error: 'API Key Error' } : r));
+                          });
+                        }}
+                        className="px-4 py-2 bg-red-500 text-white rounded text-xs font-bold uppercase tracking-widest hover:bg-red-600 transition-colors"
+                      >
+                        Try Again
+                      </button>
                     </div>
                   )}
                 </div>
